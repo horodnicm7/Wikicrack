@@ -1,0 +1,2 @@
+1. Poti folosi NLTK pentru a lucra cu cuvinte si tokenizare
+2. Poti folosi biblioteca requests pentru a face requesturi la pagini
