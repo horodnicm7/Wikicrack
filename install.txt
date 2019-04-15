@@ -1,0 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Apr 15 22:51:00 2019
+
+@author: Marian
+"""
+
+
+wget https://files.pythonhosted.org/packages/ed/9c/9030520bf6ff0b4c98988448a93c04fcbd5b13cd9520074d8ed53569ccfe/selenium-3.141.0.tar.gz
+python setup install
