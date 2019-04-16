@@ -2,7 +2,7 @@
 """
 Created on Tue Apr 16 15:42:47 2019
 
-@author: Marian
+@author: Marian Horodnic
 """
 
 class Singleton(type):

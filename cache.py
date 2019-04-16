@@ -2,7 +2,7 @@
 """
 Created on Tue Apr 16 10:59:26 2019
 
-@author: Marian
+@author: Marian Horodnic
 """
 
 import os
@@ -151,18 +151,3 @@ class Cache(object, metaclass=Singleton):
                     files.append(entry)
                 
         return files
-    
-x = Cache('default.yaml', Logger('.\\logs\\'))
-x.flush()
-x.add_file('John Travolta', 'Ana are m\nere\n,pere\n si toate cele')
-x.add_file('John Cena boi', 'Ana are m\nere\n,pere\n si toate cele')
-x.add_file('Ana', 'Ana are m\nere\n,pere\n si toate cele')
-x.add_file('dsadkasld', 'Ana are m\nere\n,pere\n si toate cele')
-x.add_file('boi Cena da nu', 'Ana are m\nere\n,pere\n si toate cele')
-x.add_file('Jo no boi', 'Ana are m\nere\n,pere\n si toate cele')
-x.add_file('Corgi the John', 'Ana are m\nere\n,pere\n si toate cele')
-x.add_file('John Wayne', 'Ana are m\nere\n,pere\n si toate cele')
-print("Result: {}".format(x.get_file('John Travolta')))
-print("Result: {}".format(x.get_file('John')))
-print("Result: {}".format(x.get_file('boi')))
-print("Result: {}".format(x.get_file('boi Cena')))

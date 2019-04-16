@@ -8,3 +8,8 @@ wikicrack:
         
     logger:
         max-logs: 20
+        
+    crawler:
+        agent-name: 'Wikicrack'
+        max-attempts-download: 10
+        sleep-between: 0.1 # seconds

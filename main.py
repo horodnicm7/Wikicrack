@@ -2,29 +2,29 @@
 """
 Created on Mon Apr 15 22:27:09 2019
 
-@author: Marian
+@author: Marian Horodnic
 """
 
 import urllib.request
-import requests
 
 from urllib import robotparser
 from urllib.error import URLError, HTTPError, ContentTooShortError
 from time import sleep
 
+from config import Config
+from logger import Logger
+
 
 class WikiCrack(object):
     url = 'https://www.wikipedia.org/wiki/'
-    log_path = 'log.txt'
-    no_attempts = 10
-    start_agent = 'Wikicrack'
     
     def __init__(self):
-        self.log_file = open(self.log_path, 'wt')
+        self.logger = Logger('.\\logs\\')
+        self.CONF = Config('default.yaml', self.logger).get()['wikicrack']
+        self.no_attempts = self.CONF['crawler']['max-attempts-download']
+        self.start_agent = self.CONF['crawler']['agent-name']
+        self.sleep_for = self.CONF['crawler']['sleep-between']
         pass
-    
-    def destructor(self):
-        self.log_file.close()
     
     def get_valid_user_agent(self):
         # init the robots.txt parser
@@ -48,8 +48,9 @@ class WikiCrack(object):
                     
         return user_agent
     
-    def _download_page(self, url, user_agent):
-        self.log_file.write('Downloading: ' + url + ' ......... ')
+    def __download_page(self, url, user_agent):
+        self.logger.log(self.__download_page, __file__,
+                        'Downloading: ' + url + ' ...')
         
         page = None
         req = urllib.request.Request(url)
@@ -65,22 +66,21 @@ class WikiCrack(object):
                 if hasattr(e, 'code'):
                     if not (e.code >= 500 and e.code < 600):
                         return None
-            
+                sleep(self.sleep_for)
             tries += 1
         return page
     
     def search_for(self, term):
         keywords = term.split(' ')
         agent = self.get_valid_user_agent()
-        content = self._download_page(self.url + keywords[0], agent)
+        content = self.__download_page(self.url + keywords[0], agent)
         # TODO: ca sa obtii link-ul pe care esti acum, wikipedia are 
         # ceva in header pentru asta (cauta pe un exemplu)
         return content
 
 if __name__ == "__main__":
     bot = WikiCrack()
-    print(bot.search_for('John'))
-    bot.destructor()
+    bot.search_for('John')
         
     
     

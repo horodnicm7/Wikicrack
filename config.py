@@ -2,7 +2,7 @@
 """
 Created on Tue Apr 16 11:05:22 2019
 
-@author: Marian
+@author: Marian Horodnic
 """
 
 import yaml
