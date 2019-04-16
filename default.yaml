@@ -6,3 +6,5 @@ wikicrack:
         location-windows: '.\\cache\\'
         location-linux-mac: './cache/' 
         
+    logger:
+        max-logs: 20

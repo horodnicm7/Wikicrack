@@ -11,13 +11,9 @@ import time
 from os import listdir, path
 from config import Config
 
+from patterns import Singleton
+from logger import Logger
 
-class Singleton(type):
-    _instances = {}
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
 
 class Cache(object, metaclass=Singleton):
     """
@@ -25,9 +21,72 @@ class Cache(object, metaclass=Singleton):
         to reduce the number of calls to Wikipedia and processing time.
         Also, it checks for cache integrity, given by a config file.
     """
-    def __init__(self, filepath):
-        self.CONF = Config(filepath).get()['wikicrack']
+    def __init__(self, filepath, logger):
+        self.logger = logger
+        self.CONF = Config(filepath, logger).get()['wikicrack']
         self.__clean_up()
+        
+    def flush(self):
+        files = self.__get_files()
+        for file in files:
+            try:
+                os.remove(file)
+            except FileNotFoundError:
+                self.logger.log(self.__clean_up, __file__, 'File not found: ' + file)
+        
+        self.logger.log(self.flush, __file__, "Deleted (flush) {} files".format(len(files)))
+        
+    def get_file(self, subject):
+        """
+            Retrieves a list of files with best matching names with the given
+            subject. The algorithm is empiric
+        """
+        files = self.__get_files(full=False)
+        split_crit = ' '
+        
+        words = subject.split(split_crit)
+        hashes = {word: 0 for word in words}
+                
+        index = 0
+        best_score, result = -1, []
+        for file in files:
+            file = file[: file.rfind('.')]
+            file = file[file.find('_') + 1:]
+            
+            if file == subject:
+                result = [files[index]]
+                break
+            
+            words = file.split(split_crit)
+            occ = 0
+            for word in words:
+                if word in hashes:
+                    occ += 1
+                    
+            if occ > best_score:
+                result = []
+                result.append(files[index])
+                best_score = occ
+            elif occ == best_score:
+                result.append(files[index])
+            
+            index += 1
+            
+        
+        # rename the resulting files to refresh accesses in cache
+        path_to = self.CONF['cache']['location-windows']
+        new_name = self.CONF['cache']['file-name-structure']
+        for file in result:
+            try:
+                os.rename(path_to + file, path_to + new_name.format(
+                        timestamp=int(time.time()), 
+                        filename=subject
+                        ))
+            except:
+                self.logger.log(self.get_file, __file__, 
+                                "Couldn't rename: {}".format(file))
+            
+        return result
         
     def add_file(self, subject, content):
         """
@@ -39,8 +98,9 @@ class Cache(object, metaclass=Singleton):
         
         with open(file, 'wt') as f:
             f.write(content)
+            f.close()
         
-        print("Added: {}".format(file))
+        self.logger.log(self.add_file, __file__, "Added: {}".format(file))
     
     def __clean_up(self):
         """
@@ -70,11 +130,11 @@ class Cache(object, metaclass=Singleton):
             try:
                 os.remove(file)
             except FileNotFoundError:
-                print('File not found: ' + file)
+                self.logger.log(self.__clean_up, __file__, 'File not found: ' + file)
                 
-        print("Deleted {} files.".format(len(to_delete)))
+        self.logger.log(self.__clean_up, __file__, "Deleted {} files.".format(len(to_delete)))
         
-    def __get_files(self):
+    def __get_files(self, full=True):
         """
             Returns a list of all files from cache
         """
@@ -85,9 +145,24 @@ class Cache(object, metaclass=Singleton):
         for entry in raw:
             full_path = path.join(filepath, entry)
             if path.isfile(full_path):
-                files.append(full_path)
+                if full:
+                    files.append(full_path)
+                else:
+                    files.append(entry)
                 
         return files
     
-x = Cache('default.yaml')    
+x = Cache('default.yaml', Logger('.\\logs\\'))
+x.flush()
+x.add_file('John Travolta', 'Ana are m\nere\n,pere\n si toate cele')
+x.add_file('John Cena boi', 'Ana are m\nere\n,pere\n si toate cele')
+x.add_file('Ana', 'Ana are m\nere\n,pere\n si toate cele')
+x.add_file('dsadkasld', 'Ana are m\nere\n,pere\n si toate cele')
+x.add_file('boi Cena da nu', 'Ana are m\nere\n,pere\n si toate cele')
+x.add_file('Jo no boi', 'Ana are m\nere\n,pere\n si toate cele')
+x.add_file('Corgi the John', 'Ana are m\nere\n,pere\n si toate cele')
 x.add_file('John Wayne', 'Ana are m\nere\n,pere\n si toate cele')
+print("Result: {}".format(x.get_file('John Travolta')))
+print("Result: {}".format(x.get_file('John')))
+print("Result: {}".format(x.get_file('boi')))
+print("Result: {}".format(x.get_file('boi Cena')))

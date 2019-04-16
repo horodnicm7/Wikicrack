@@ -7,17 +7,14 @@ Created on Tue Apr 16 11:05:22 2019
 
 import yaml
 
+from patterns import Singleton
+from logger import Logger
 
-class Singleton(type):
-    _instances = {}
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
 
 class Config(object, metaclass=Singleton):
-    def __init__(self, path):
+    def __init__(self, path, logger):
         self.path = path
+        self.logger = logger
         
     def get(self):
         result = dict()
@@ -25,6 +22,6 @@ class Config(object, metaclass=Singleton):
             try:
                 result = yaml.safe_load(conf)
             except yaml.YAMLError as exc:
-                print(exc)
+                self.logger.log(self.get, __file__, exc)
                 
         return result
