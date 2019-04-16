@@ -1,0 +1,8 @@
+wikicrack:
+    cache:
+        max-size: 50 # MBs
+        max-length: 500 # files
+        file-name-structure: "{timestamp}_{filename}.txt"
+        location-windows: '.\\cache\\'
+        location-linux-mac: './cache/' 
+        
