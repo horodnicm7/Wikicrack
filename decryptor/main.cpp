@@ -2,6 +2,7 @@
 #include <vector>
 #include <unordered_map>
 #include <string>
+#include <utility>
 
 #include <string.h>
 #include <stdio.h>
@@ -17,7 +18,7 @@ long skip_header(char *text) {
 }
 
 long skip_body_tag(char *text) {
-        return get_first_occurence(text, ">") + 1;
+        return get_first_occurence(text, '>') + 1;
 }
 
 /*
@@ -70,10 +71,12 @@ char *get_tag_text(char *text, char *tag) {
         int tag_len = strlen(tag);
         int clos_len = strlen(closing);
 
-        long next_pos = get_first_occurence(text + tag_len, tag) + tag_len;
+        long next_pos = get_first_occurence(text + tag_len, tag);
         long close_pos = get_first_occurence(text, closing);
         long tag_end = get_first_occurence(text, '>');
         long len = 0;
+
+        cout << close_pos << endl;
 
         // if there are no more tags like this one
         if (next_pos == -1) {
@@ -85,11 +88,14 @@ char *get_tag_text(char *text, char *tag) {
                 // eg: <div> <div> <div> </div> </div> </div>
                 if (next_pos < close_pos) {
                         int no_tags_left = 0; //number of tags - 1 (the first one)
+                        next_pos += tag_len;
 
                         while (next_pos < close_pos) {
                                 next_pos += get_first_occurence(text + tag_len + next_pos, tag) + tag_len;
                                 no_tags_left++;
                         }
+
+                        cout << no_tags_left << endl;
 
                         for (int i = 0; i < no_tags_left; i++) {
                                 close_pos += get_first_occurence(text + clos_len + close_pos, closing) + clos_len;
@@ -97,6 +103,9 @@ char *get_tag_text(char *text, char *tag) {
                 }
 
                 len = close_pos - tag_end;
+                cout << "copy: " << len << endl;
+                cout << close_pos << endl;
+                cout << tag_end << endl;
                 result = (char *) malloc((len + 1) * sizeof(char));
                 strncpy(result, text + tag_end + 1, len - 1);
         }
@@ -105,33 +114,116 @@ char *get_tag_text(char *text, char *tag) {
         return result;
 }
 
+pair<long, int> has_tags(char *source) {
+        char *text = source;
+        for (long i = 0; ; i++) {
+                if (*text != '\0') {
+                        if (*text == '<') {
+                                for (int j = 0; j < tags_len; j++) {
+                                        if (compare_next(text, tags[j])) {
+                                                return make_pair(i, j);
+                                        }
+                                }
+                        }
+                } else {
+                        break;
+                }
+
+                text++;
+        }
+        return make_pair(-1, -1);
+}
+
+char *get_tag_content(char *text, char *tag) {
+        char *content = (char *) malloc(strlen(text) + 1);
+        strcpy(content, text);
+
+        while (true) {
+                pair<long, int> res = has_tags(content);
+                long pos = res.first;
+                int type = res.second;
+
+                if (pos == -1) {
+                        break;
+                }
+
+                cout << pos << endl;
+                char *text = get_tag_text(content, tags[type]);
+                cout << text << endl;
+
+                break;
+        }
+
+        cout << content << endl;
+        return content;
+}
+/*char *get_tag_content(char *text, char *tag) {
+        char *content = get_tag_text(text, tag);
+        char *inner_tag;
+
+        pair<long, int> res = has_tags(content);
+        long pos = res.first;
+        int type = res.second;
+
+        // it's just plain text
+        if (pos == -1) {
+                return content;
+        }
+
+        long content_len = strlen(content);
+        long cursor = 0;
+        char *result = (char *) malloc((content_len + 1) * sizeof(char));
+
+
+        for (long i = pos; i < content_len; i++) {
+                if (content[i] == '<') {
+                        res = has_tags(content + i);
+                        pos = res.first;
+                        type = res.second;
+
+                        strncpy(result + cursor, content + i, pos);
+                }
+        }
+
+        free(inner_tag);
+        return NULL;
+}*/
+
 void tests(char *text) {
         /* TEST closing tag */
-        cout << "Test closing tags\n===================\n";
+        //cout << "Test closing tags\n===================\n";
         char c1[] = "<h1";
         char c2[] = "<h2";
         char c3[] = "<sup";
         char c4[] = "<span";
         char c5[] = "<div";
         char c6[] = "<table";
-        cout << build_closing_tag(c1) << "\n";
-        cout << build_closing_tag(c2) << "\n";
-        cout << build_closing_tag(c3) << "\n";
-        cout << build_closing_tag(c4) << "\n";
-        cout << build_closing_tag(c5) << "\n";
-        cout << build_closing_tag(c6) << "\n\n";
+        //cout << build_closing_tag(c1) << "\n";
+        //cout << build_closing_tag(c2) << "\n";
+        //cout << build_closing_tag(c3) << "\n";
+        //cout << build_closing_tag(c4) << "\n";
+        //cout << build_closing_tag(c5) << "\n";
+        //cout << build_closing_tag(c6) << "\n\n";
 
         /* TEST get text from tag */
         char x1[] = "<title";
         char x2[] = "<script";
         char x3[] = "<div";
-        long pos = get_first_occurence(text, x1);
-        cout << get_tag_text(text + pos, x1) << "\n";
-        pos = get_first_occurence(text, x2);
-        cout << get_tag_text(text + pos, x2) << "\n";
-        cout << get_tag_text(text + 12309, x3) << "\n";
+        //long pos = get_first_occurence(text, x1);
+        //cout << get_tag_text(text + pos, x1) << "\n";
+        //pos = get_first_occurence(text, x2);
+        //cout << get_tag_text(text + pos, x2) << "\n";
+        //cout << get_tag_text(text + 12309, x3) << "\n";
+        //cout << get_tag_text(text + 34663, x3) << "\n\n";*/
 
-        cout << get_tag_text(text + 34663, x3) << "\n";
+        /* TEST get only text from tag */
+        //pos = get_first_occurence(text, x1);
+        //cout << get_tag_content(text + pos, x1) << "\n";
+        //pos = get_first_occurence(text, x2);
+        //cout << get_tag_content(text + pos, x2) << "\n\n";
+        //cout << get_tag_content(text + 12309, x3) << "\n";
+
+        get_tag_content(text, x3);
 }
 
 int main() {
