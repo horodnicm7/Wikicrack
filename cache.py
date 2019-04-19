@@ -106,7 +106,7 @@ class Cache(object, metaclass=Singleton):
             f.write(content)
             f.close()
         
-        self.logger.log(self.add_file, __file__, "Added: {}".format(file))
+        self.logger.log(self.add_file, __file__, "Added: {} to cache".format(file))
     
     def __clean_up(self):
         """
