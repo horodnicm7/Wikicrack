@@ -13,6 +13,7 @@ from time import sleep
 
 from config import Config
 from logger import Logger
+from decryptor import Decryptor
 
 
 class WikiCrack(object):
@@ -73,15 +74,17 @@ class WikiCrack(object):
     def search_for(self, term):
         keywords = term.split(' ')
         agent = self.get_valid_user_agent()
-        print(agent)
         content = self.__download_page(self.url + keywords[0], agent)
         # TODO: ca sa obtii link-ul pe care esti acum, wikipedia are 
         # ceva in header pentru asta (cauta pe un exemplu)
-        return content
+        self.decrypt = Decryptor()
+        self.decrypt.set_content(content)
+        return self.decrypt.get_text()
+
 
 if __name__ == "__main__":
     bot = WikiCrack()
-    print(bot.search_for('Michael_Jackson'))
+    print(bot.search_for('Dwayne_Johnson'))
         
     
     
