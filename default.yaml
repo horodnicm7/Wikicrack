@@ -4,7 +4,8 @@ wikicrack:
         max-length: 500 # files
         file-name-structure: "{timestamp}_{filename}.txt"
         location-windows: '.\\cache\\'
-        location-linux-mac: './cache/' 
+        location-linux-mac: './cache/'
+        limit-per-subject: 2 # means that if you get more than 2 files from cache from a get, then it's wrong
         
     logger:
         max-logs: 20

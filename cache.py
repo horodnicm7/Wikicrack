@@ -7,6 +7,7 @@ Created on Tue Apr 16 10:59:26 2019
 
 import os
 import time
+import shutil
 
 from os import listdir, path
 from config import Config
@@ -21,9 +22,9 @@ class Cache(object, metaclass=Singleton):
         to reduce the number of calls to Wikipedia and processing time.
         Also, it checks for cache integrity, given by a config file.
     """
-    def __init__(self, filepath, logger):
+    def __init__(self, CONF, logger):
         self.logger = logger
-        self.CONF = Config(filepath, logger).get()['wikicrack']
+        self.CONF = CONF
         self.__clean_up()
         
     def flush(self):
@@ -46,15 +47,17 @@ class Cache(object, metaclass=Singleton):
         
         words = subject.split(split_crit)
         hashes = {word: 0 for word in words}
+        
                 
         index = 0
         best_score, result = -1, []
+        path_to = self.CONF['cache']['location-windows']
         for file in files:
             file = file[: file.rfind('.')]
             file = file[file.find('_') + 1:]
             
             if file == subject:
-                result = [files[index]]
+                result = [path_to + files[index]]
                 break
             
             words = file.split(split_crit)
@@ -62,29 +65,32 @@ class Cache(object, metaclass=Singleton):
             for word in words:
                 if word in hashes:
                     occ += 1
-                    
-            if occ > best_score:
-                result = []
-                result.append(files[index])
-                best_score = occ
-            elif occ == best_score:
-                result.append(files[index])
+                   
+            if occ != 0:
+                if occ > best_score:
+                    result = []
+                    result.append(path_to + files[index])
+                    best_score = occ
+                elif occ == best_score:
+                    result.append(path_to + files[index])
             
             index += 1
             
         
         # rename the resulting files to refresh accesses in cache
-        path_to = self.CONF['cache']['location-windows']
         new_name = self.CONF['cache']['file-name-structure']
-        for file in result:
+        for i in range(len(result)):
             try:
-                os.rename(path_to + file, path_to + new_name.format(
-                        timestamp=int(time.time()), 
-                        filename=subject
-                        ))
-            except:
+                new_file = path_to + new_name.format(
+                            timestamp=int(time.time()), 
+                            filename=subject
+                            )
+                shutil.copy2(result[i], new_file)
+                os.remove(result[i])
+                result[i] = new_file
+            except Exception as e:
                 self.logger.log(self.get_file, __file__, 
-                                "Couldn't rename: {}".format(file))
+                                "Couldn't bring: {0} forward in cache! {1}".format(file, e))
             
         return result
         

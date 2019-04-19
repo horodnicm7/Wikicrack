@@ -2,7 +2,7 @@
 """
 Created on Fri Apr 19 19:38:24 2019
 
-@author: Marian
+@author: Marian Horodnic
 """
 
 import html2text
@@ -15,13 +15,16 @@ from logger import Logger
 
 
 class Decryptor(object, metaclass=Singleton):
-    def __init__(self):
-        pass
+    def __init__(self, logger):
+        self.logger = logger
         
     def __clean_up(self, content):
         content = re.sub('\[[0-9a-zA-Z ]+\]', '', content)
         content = re.sub(r'^$\n', '', content, flags=re.MULTILINE)
         content = re.sub(r'^[,\[\]]+\n', '', content, flags=re.MULTILINE)
+        
+        self.logger.log(self.get_text, __file__, 
+                        'Got all text from page and filtered the output')
         
         return content
     
@@ -32,6 +35,7 @@ class Decryptor(object, metaclass=Singleton):
         self.soup = self.soup.find("div", {"id": "mw-content-text"})
         content = str(self.soup.findAll("p"))
         
+        self.logger.log(self.get_text, __file__, 'Filtered content from wiki')
         h = html2text.HTML2Text()
         h.ignore_links = True
         h.ignore_images = True

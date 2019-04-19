@@ -14,6 +14,7 @@ from time import sleep
 from config import Config
 from logger import Logger
 from decryptor import Decryptor
+from cache import Cache
 
 
 class WikiCrack(object):
@@ -25,7 +26,9 @@ class WikiCrack(object):
         self.no_attempts = self.CONF['crawler']['max-attempts-download']
         self.start_agent = self.CONF['crawler']['agent-name']
         self.sleep_for = self.CONF['crawler']['sleep-between']
-        pass
+        self.max_accepted = self.CONF['cache']['limit-per-subject']
+        self.decrypt = Decryptor(self.logger)
+        self.cache = Cache(self.CONF, self.logger)
     
     def get_valid_user_agent(self):
         # init the robots.txt parser
@@ -69,28 +72,40 @@ class WikiCrack(object):
                         return None
                 sleep(self.sleep_for)
             tries += 1
-        return page
+        return page    
     
     def search_for(self, term):
-        keywords = term.split(' ')
-        agent = self.get_valid_user_agent()
-        content = self.__download_page(self.url + keywords[0], agent)
-        # TODO: ca sa obtii link-ul pe care esti acum, wikipedia are 
-        # ceva in header pentru asta (cauta pe un exemplu)
-        self.decrypt = Decryptor()
-        self.decrypt.set_content(content)
-        return self.decrypt.get_text()
+        self.logger.log(self.search_for, __file__, 
+                        "Searching for subject: {}...".format(term))
+        hits = self.cache.get_file(term)
+        
+        if hits == [] or len(hits) > self.max_accepted:
+            if not hits:
+                self.logger.log(self.search_for, __file__, 
+                                'Cache miss!')
+            if len(hits) > self.max_accepted:
+                self.logger.log(self.search_for, __file__, 
+                                'Too many cache hits! Considering it as a wrong result')
+            keywords = term.split(' ')
+            agent = self.get_valid_user_agent()
+            content = self.__download_page(self.url + keywords[0], agent)
+            # TODO: ca sa obtii link-ul pe care esti acum, wikipedia are 
+            # ceva in header pentru asta (cauta pe un exemplu)
+            self.decrypt.set_content(content)
+            result = self.decrypt.get_text()
+            
+            # add entry in cache
+            self.cache.add_file(term, result)
+            return result
+        else:
+            self.logger.log(self.search_for, __file__, 
+                            'Cache hit! Extracting from cache...')
+            with open(hits[0], 'rt') as file:
+                return file.read()
 
 
 if __name__ == "__main__":
     bot = WikiCrack()
-    print(bot.search_for('Dwayne_Johnson'))
-        
-    
-    
-    
-    
-    
-    
-    
-    
+    bot.search_for('Dwayne_Johnson')
+    bot.search_for('Michael_Jackson')
+    bot.search_for('Kevin_Hart')
