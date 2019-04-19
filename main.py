@@ -73,6 +73,7 @@ class WikiCrack(object):
     def search_for(self, term):
         keywords = term.split(' ')
         agent = self.get_valid_user_agent()
+        print(agent)
         content = self.__download_page(self.url + keywords[0], agent)
         # TODO: ca sa obtii link-ul pe care esti acum, wikipedia are 
         # ceva in header pentru asta (cauta pe un exemplu)
@@ -80,7 +81,7 @@ class WikiCrack(object):
 
 if __name__ == "__main__":
     bot = WikiCrack()
-    bot.search_for('John')
+    print(bot.search_for('Michael_Jackson'))
         
     
     
