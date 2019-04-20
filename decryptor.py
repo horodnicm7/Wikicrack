@@ -21,7 +21,7 @@ class Decryptor(object, metaclass=Singleton):
     def __clean_up(self, content):
         content = re.sub('\[[0-9a-zA-Z ]+\]', '', content)
         content = re.sub(r'^$\n', '', content, flags=re.MULTILINE)
-        content = re.sub(r'^[,\[\]]+\n', '', content, flags=re.MULTILINE)
+        content = re.sub(r'^[,\[\]\ ]+\n', '', content, flags=re.MULTILINE)
         
         self.logger.log(self.get_text, __file__, 
                         'Got all text from page and filtered the output')
@@ -41,5 +41,6 @@ class Decryptor(object, metaclass=Singleton):
         h.ignore_images = True
         h.ignore_tables = True
         h.ignore_emphasis = True
+        h.body_width = 0
         return self.__clean_up(h.handle(content))
         
