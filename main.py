@@ -27,6 +27,7 @@ class WikiCrack(object):
         self.start_agent = self.CONF['crawler']['agent-name']
         self.sleep_for = self.CONF['crawler']['sleep-between']
         self.max_accepted = self.CONF['cache']['limit-per-subject']
+        self.accepted_length = self.CONF['crawler']['min-accepted-length']
         self.decrypt = Decryptor(self.logger)
         self.cache = Cache(self.CONF, self.logger)
         self.agent = None
@@ -97,9 +98,16 @@ class WikiCrack(object):
             self.decrypt.set_content(content)
             result = self.decrypt.get_text()
             
-            # add entry in cache
-            self.cache.add_file(term, result)
-            return result
+            if len(result) >= self.accepted_length:
+                # add entry in cache
+                self.cache.add_file(term, result)
+                return result
+            else:
+                # content is too short and it's a great chance that we're on the  
+                # 'may also refer to' page
+                self.logger.log(self.search_for, __file__, 
+                            'Content too short! Considering the search operation a failure.')
+                return ""
         else:
             self.logger.log(self.search_for, __file__, 
                             'Cache hit! Extracting from cache...')
