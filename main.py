@@ -27,7 +27,8 @@ class WikiCrack(object):
         self.start_agent = self.CONF['crawler']['agent-name']
         self.sleep_for = self.CONF['crawler']['sleep-between']
         self.max_accepted = self.CONF['cache']['limit-per-subject']
-        self.accepted_length = self.CONF['crawler']['min-accepted-length']
+        self.accepted_length = self.CONF['output']['min-accepted-length']
+        self.word_wrap = self.CONF['output']['word-wrap']
         self.decrypt = Decryptor(self.logger)
         self.cache = Cache(self.CONF, self.logger)
         self.agent = None
@@ -82,9 +83,12 @@ class WikiCrack(object):
         hits = self.cache.get_file(term)
         
         if hits == [] or len(hits) > self.max_accepted:
+            # if there are no cache hits
             if not hits:
                 self.logger.log(self.search_for, __file__, 
                                 'Cache miss!')
+            
+            # check if the search term is too general for our cache
             if len(hits) > self.max_accepted:
                 self.logger.log(self.search_for, __file__, 
                                 'Too many cache hits! Considering it as a wrong result')
@@ -93,11 +97,12 @@ class WikiCrack(object):
             if not self.agent:
                 self.agent = self.get_valid_user_agent()
             content = self.__download_page(self.url + keywords[0], self.agent)
-            # TODO: ca sa obtii link-ul pe care esti acum, wikipedia are 
-            # ceva in header pentru asta (cauta pe un exemplu)
+
+            # prepare decryptor and get clean text from it
             self.decrypt.set_content(content)
-            result = self.decrypt.get_text()
+            result = self.decrypt.get_text(wrap=self.word_wrap)
             
+            # check if the text's length is reasonable
             if len(result) >= self.accepted_length:
                 # add entry in cache
                 self.cache.add_file(term, result)

@@ -31,7 +31,7 @@ class Decryptor(object, metaclass=Singleton):
     def set_content(self, text):
         self.soup = BeautifulSoup(text, features="lxml")
         
-    def get_text(self):
+    def get_text(self, wrap=False):
         self.soup = self.soup.find("div", {"id": "mw-content-text"})
         content = str(self.soup.findAll("p"))
         
@@ -41,6 +41,7 @@ class Decryptor(object, metaclass=Singleton):
         h.ignore_images = True
         h.ignore_tables = True
         h.ignore_emphasis = True
-        h.body_width = 0
+        if not wrap:
+            h.body_width = 0
         return self.__clean_up(h.handle(content))
         

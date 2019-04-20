@@ -14,4 +14,7 @@ wikicrack:
         agent-name: 'Wikicrack'
         max-attempts-download: 10
         sleep-between: 0.1 # seconds
+
+    output:
         min-accepted-length: 200
+        word-wrap: False
